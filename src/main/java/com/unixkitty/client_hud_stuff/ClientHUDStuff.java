@@ -19,6 +19,14 @@ public class ClientHUDStuff
     {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.CLIENT_CONFIG);
 
-        LOG.warn("Testing testerino!");
+//        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onPostSetup);
     }
+
+    /*private void onPostSetup(FMLCommonSetupEvent event)
+    {
+        event.enqueueWork(() ->
+        {
+            Config.;
+        });
+    }*/
 }
