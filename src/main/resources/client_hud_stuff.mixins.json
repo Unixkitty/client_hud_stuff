@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.unixkitty.client_hud_stuff.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "client_hud_stuff.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "minVersion": "0.8"
+}
