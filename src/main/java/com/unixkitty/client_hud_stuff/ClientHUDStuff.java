@@ -18,15 +18,5 @@ public class ClientHUDStuff
     public ClientHUDStuff()
     {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.CLIENT_CONFIG);
-
-//        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onPostSetup);
     }
-
-    /*private void onPostSetup(FMLCommonSetupEvent event)
-    {
-        event.enqueueWork(() ->
-        {
-            Config.;
-        });
-    }*/
 }

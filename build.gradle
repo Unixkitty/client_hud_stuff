@@ -23,16 +23,6 @@ apply plugin: 'maven-publish'
 
 repositories {
     maven {
-        // location of the maven that hosts JEI files
-        name = "Progwml6 maven"
-        url = "https://dvs1.progwml6.com/files/maven/"
-    }
-    maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "https://modmaven.dev"
-    }
-    maven {
         url "https://cursemaven.com"
         content {
             includeGroup "curse.maven"
@@ -168,9 +158,6 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
-    // at runtime, use the full JEI jar
-    runtimeOnly fg.deobf("mezz.jei:jei-${mod_minecraft_version}-forge:${jei_version}")
 }
 
 mixin {

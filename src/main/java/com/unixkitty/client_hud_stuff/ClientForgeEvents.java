@@ -14,6 +14,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.ForgeMod;
@@ -24,6 +25,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+@OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = ClientHUDStuff.MODID, value = Dist.CLIENT)
 public class ClientForgeEvents
 {
@@ -34,9 +36,9 @@ public class ClientForgeEvents
     {
         final Minecraft minecraft = Minecraft.getInstance();
         final LocalPlayer player = minecraft.player;
-        minecraft.getProfiler().push("client_hud_stuff_mod");
+        minecraft.getProfiler().push(ClientHUDStuff.MODID + "_mod");
 
-        if (player != null && minecraft.level != null && minecraft.getCameraEntity() instanceof Player && player.isAlive() && !player.isSpectator() && !minecraft.options.hideGui)
+        if (player != null && minecraft.level != null && minecraft.getCameraEntity() instanceof Player && !minecraft.options.hideGui)
         {
             final int screenWidth = minecraft.getWindow().getGuiScaledWidth();
             final int screenHeight = minecraft.getWindow().getGuiScaledHeight();
@@ -44,8 +46,7 @@ public class ClientForgeEvents
             PoseStack poseStack = event.getPoseStack();
             final ResourceLocation currentOverlay = event.getOverlay().id();
 
-            //TODO remove debug X and Y render under mouse cursor
-            if (!minecraft.mouseHandler.isMouseGrabbed() && minecraft.isWindowActive())
+            if (Config.showMouseCoords.get() && !minecraft.mouseHandler.isMouseGrabbed() && minecraft.isWindowActive())
             {
                 double mouseX = minecraft.mouseHandler.xpos();
                 double mouseY = minecraft.mouseHandler.ypos();
@@ -62,53 +63,29 @@ public class ClientForgeEvents
                 poseStack.popPose();
             }
 
-            if (minecraft.gameMode != null && minecraft.gameMode.canHurtPlayer() && Config.enableNumberHUDs.get())
+            if (player.isAlive() && !player.isSpectator())
             {
-                int leftHeight = 39;
-                int rightHeight = 39;
-
-                //Health numbers
-                if (currentOverlay == VanillaGuiOverlay.PLAYER_HEALTH.id() && Config.healthNumbersEnabled.get())
+                if (minecraft.gameMode != null && minecraft.gameMode.canHurtPlayer() && Config.enableNumberHUDs.get())
                 {
-                    float currentHealth = player.getHealth();
-                    float absorption = player.getAbsorptionAmount();
-                    float maxHealth = player.getMaxHealth();
+                    int leftHeight = 39;
+                    int rightHeight = 39;
 
-                    MutableComponent component = numberComponent(currentHealth, HUDElement.HEALTH);
-                    if (absorption > 0)
+                    //Health numbers
+                    if (currentOverlay == VanillaGuiOverlay.PLAYER_HEALTH.id() && Config.healthNumbersEnabled.get())
                     {
-                        component.append(separatorComponent("+"));
-                        component.append(numberComponent(absorption, HUDElement.ABSORPTION));
-                    }
-                    component.append(separatorComponent("/"));
-                    component.append(numberComponent(maxHealth, HUDElement.HEALTH));
+                        float currentHealth = player.getHealth();
+                        float absorption = player.getAbsorptionAmount();
+                        float maxHealth = player.getMaxHealth();
 
-                    int startX = screenWidth / 2 - 92 - minecraft.font.width(component.getVisualOrderText());
-                    int startY = screenHeight - leftHeight;
-
-                    poseStack.pushPose();
-
-                    minecraft.font.drawShadow(poseStack, component, startX, startY, WHITE);
-
-                    poseStack.popPose();
-                }
-
-                //Armour numbers
-                if (currentOverlay == VanillaGuiOverlay.ARMOR_LEVEL.id() && Config.armourNumbersEnabled.get())
-                {
-                    float armor = (float) player.getAttributeValue(Attributes.ARMOR);
-                    float armorToughness = (float) player.getAttributeValue(Attributes.ARMOR_TOUGHNESS);
-
-                    if (armor > 0 || armorToughness > 0)
-                    {
-                        MutableComponent component = numberComponent(armor, HUDElement.ARMOUR);
-                        if (armorToughness > 0)
+                        MutableComponent component = numberComponent(currentHealth, HUDElement.HEALTH);
+                        if (absorption > 0)
                         {
                             component.append(separatorComponent("+"));
-                            component.append(numberComponent(armorToughness, HUDElement.TOUGHNESS));
+                            component.append(numberComponent(absorption, HUDElement.ABSORPTION));
                         }
+                        component.append(separatorComponent("/"));
+                        component.append(numberComponent(maxHealth, HUDElement.HEALTH));
 
-                        leftHeight += 10;
                         int startX = screenWidth / 2 - 92 - minecraft.font.width(component.getVisualOrderText());
                         int startY = screenHeight - leftHeight;
 
@@ -118,44 +95,47 @@ public class ClientForgeEvents
 
                         poseStack.popPose();
                     }
-                }
 
-                //Hunger numbers
-                if (currentOverlay == VanillaGuiOverlay.FOOD_LEVEL.id() && Config.hungerNumbersEnabled.get())
-                {
-                    int hunger = player.getFoodData().getFoodLevel();
-                    float saturation = player.getFoodData().getSaturationLevel();
-
-                    MutableComponent component = numberComponent(hunger, HUDElement.HUNGER);
-                    if (saturation > 0)
+                    //Armour numbers
+                    if (currentOverlay == VanillaGuiOverlay.ARMOR_LEVEL.id() && Config.armourNumbersEnabled.get())
                     {
-                        component.append(separatorComponent("+"));
-                        component.append(numberComponent(saturation, HUDElement.SATURATION));
+                        float armor = (float) player.getAttributeValue(Attributes.ARMOR);
+                        float armorToughness = (float) player.getAttributeValue(Attributes.ARMOR_TOUGHNESS);
+
+                        if (armor > 0 || armorToughness > 0)
+                        {
+                            MutableComponent component = numberComponent(armor, HUDElement.ARMOUR);
+                            if (armorToughness > 0)
+                            {
+                                component.append(separatorComponent("+"));
+                                component.append(numberComponent(armorToughness, HUDElement.TOUGHNESS));
+                            }
+
+                            leftHeight += 10;
+                            int startX = screenWidth / 2 - 92 - minecraft.font.width(component.getVisualOrderText());
+                            int startY = screenHeight - leftHeight;
+
+                            poseStack.pushPose();
+
+                            minecraft.font.drawShadow(poseStack, component, startX, startY, WHITE);
+
+                            poseStack.popPose();
+                        }
                     }
 
-                    int startX = screenWidth / 2 + 92;
-                    int startY = screenHeight - rightHeight;
-
-                    poseStack.pushPose();
-
-                    minecraft.font.drawShadow(poseStack, component, startX, startY, WHITE);
-
-                    poseStack.popPose();
-                }
-
-                //Air numbers
-                if (currentOverlay == VanillaGuiOverlay.AIR_LEVEL.id() && Config.airNumbersEnabled.get())
-                {
-                    int currentAir = player.getAirSupply();
-                    int maxAir = player.getMaxAirSupply();
-
-                    if (player.isEyeInFluidType(ForgeMod.WATER_TYPE.get()) || currentAir < maxAir)
+                    //Hunger numbers
+                    if (currentOverlay == VanillaGuiOverlay.FOOD_LEVEL.id() && Config.hungerNumbersEnabled.get())
                     {
-                        MutableComponent component = numberComponent(currentAir, HUDElement.AIR);
-                        component.append(separatorComponent("/"));
-                        component.append(numberComponent(maxAir, HUDElement.AIR));
+                        int hunger = player.getFoodData().getFoodLevel();
+                        float saturation = player.getFoodData().getSaturationLevel();
 
-                        rightHeight += 10;
+                        MutableComponent component = numberComponent(hunger, HUDElement.HUNGER);
+                        if (saturation > 0)
+                        {
+                            component.append(separatorComponent("+"));
+                            component.append(numberComponent(saturation, HUDElement.SATURATION));
+                        }
+
                         int startX = screenWidth / 2 + 92;
                         int startY = screenHeight - rightHeight;
 
@@ -165,36 +145,60 @@ public class ClientForgeEvents
 
                         poseStack.popPose();
                     }
+
+                    //Air numbers
+                    if (currentOverlay == VanillaGuiOverlay.AIR_LEVEL.id() && Config.airNumbersEnabled.get())
+                    {
+                        int currentAir = player.getAirSupply();
+                        int maxAir = player.getMaxAirSupply();
+
+                        if (player.isEyeInFluidType(ForgeMod.WATER_TYPE.get()) || currentAir < maxAir)
+                        {
+                            MutableComponent component = numberComponent(currentAir, HUDElement.AIR);
+                            component.append(separatorComponent("/"));
+                            component.append(numberComponent(maxAir, HUDElement.AIR));
+
+                            rightHeight += 10;
+                            int startX = screenWidth / 2 + 92;
+                            int startY = screenHeight - rightHeight;
+
+                            poseStack.pushPose();
+
+                            minecraft.font.drawShadow(poseStack, component, startX, startY, WHITE);
+
+                            poseStack.popPose();
+                        }
+                    }
                 }
-            }
 
-            //Distance HUD
-            if (currentOverlay == VanillaGuiOverlay.CROSSHAIR.id() && Config.distanceHUDEnabled.get() && isHoldingItem(player))
-            {
-                poseStack.pushPose();
-
-                String text = "Too far!";
-
-                double rayLength = Config.maxRayCastDistance.get();
-                Vec3 eyePosition = player.getEyePosition(event.getPartialTick());
-                Vec3 viewVector = player.getViewVector(event.getPartialTick());
-                Vec3 target = eyePosition.add(viewVector.x * rayLength, viewVector.y * rayLength, viewVector.z * rayLength);
-                BlockHitResult hitResult = minecraft.level.clip(new ClipContext(eyePosition, target, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
-                boolean miss = hitResult.getType() == HitResult.Type.MISS;
-                int colour = ChatFormatting.DARK_RED.getColor();
-
-                if (!miss)
+                //Distance HUD
+                if (currentOverlay == VanillaGuiOverlay.CROSSHAIR.id() && Config.distanceHUDEnabled.get() && isHoldingItem(player))
                 {
-                    text = String.format("%.1f", eyePosition.distanceTo(hitResult.getLocation())) + " m";
-                    colour = WHITE;
+                    poseStack.pushPose();
+
+                    String text = "Too far!";
+
+                    double rayLength = Config.maxRayCastDistance.get();
+                    Vec3 eyePosition = player.getEyePosition(event.getPartialTick());
+                    Vec3 viewVector = player.getViewVector(event.getPartialTick());
+                    Vec3 target = eyePosition.add(viewVector.x * rayLength, viewVector.y * rayLength, viewVector.z * rayLength);
+                    BlockHitResult hitResult = minecraft.level.clip(new ClipContext(eyePosition, target, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
+                    boolean miss = hitResult.getType() == HitResult.Type.MISS;
+                    int colour = ChatFormatting.DARK_RED.getColor();
+
+                    if (!miss)
+                    {
+                        text = String.format("%.1f", eyePosition.distanceTo(hitResult.getLocation())) + " m";
+                        colour = WHITE;
+                    }
+
+                    float x = (screenWidth / 2F) - (minecraft.font.width(text) / 2F);
+                    float y = (screenHeight / 2F) - (minecraft.font.lineHeight * 1.5F);
+
+                    minecraft.font.drawShadow(poseStack, text, x, y, colour);
+
+                    poseStack.popPose();
                 }
-
-                float x = (screenWidth / 2F) - (minecraft.font.width(text) / 2F);
-                float y = (screenHeight / 2F) - (minecraft.font.lineHeight * 1.5F);
-
-                minecraft.font.drawShadow(poseStack, text, x, y, colour);
-
-                poseStack.popPose();
             }
         }
 

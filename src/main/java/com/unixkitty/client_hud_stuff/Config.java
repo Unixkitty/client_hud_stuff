@@ -62,9 +62,13 @@ public class Config
     public static ForgeConfigSpec.EnumValue<ChatFormatting> armourToughnessColour;
     public static ForgeConfigSpec.IntValue armourNumberDecimal;
 
+    public static ForgeConfigSpec.BooleanValue showMouseCoords;
+
     static
     {
         ForgeConfigSpec.Builder clientConfig = new ForgeConfigSpec.Builder();
+
+        showMouseCoords = clientConfig.comment("Show X and Y under the mouse cursor for debug or testing purposes").define("showMouseCoords", false);
 
         {
             clientConfig.push("Distance HUD");
